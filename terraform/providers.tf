@@ -1,0 +1,2 @@
+provider "null" {}
+provider "local" {}
