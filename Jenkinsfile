@@ -6,6 +6,10 @@ pipeline {
     choice(name: 'TARGET_ENV', choices: ['dev','staging','prod'], description: 'Terraform workspace / namespace')
   }
 
+  environment {
+    PATH = "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+  }
+
   stages {
     stage('Terraform Init') {
       steps {
