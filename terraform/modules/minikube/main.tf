@@ -21,18 +21,3 @@ data "null_data_source" "ctx" {
     kube_context = "minikube"
   }
 }
-
-resource "null_resource" "minikube_ip" {
-  depends_on = [null_resource.minikube_start]
-  triggers = {
-    profile = var.minikube_profile
-  }
-
-  provisioner "local-exec" {
-    command = <<EOT
-set -e
-minikube ip -p "${var.minikube_profile}" > .minikube_ip.txt
-EOT
-    interpreter = ["/bin/bash", "-lc"]
-  }
-}
