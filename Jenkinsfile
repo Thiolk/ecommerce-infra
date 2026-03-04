@@ -58,7 +58,7 @@ pipeline {
           chmod +x ./scripts/write-outputs-json.sh
           ./scripts/write-outputs-json.sh "${TARGET_ENV}"
         '''
-        archiveArtifacts artifacts: 'infra-outputs.json', fingerprint: true
+        archiveArtifacts artifacts: 'infra-outputs*.json', fingerprint: true
       }
     }
   }
