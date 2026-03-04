@@ -31,12 +31,8 @@ variable "ingress_controller_service" {
   default     = "ingress-nginx-controller"
 }
 
-variable "jenkins_port" {
-  type        = number
-  default     = 8080
-}
-
-variable "jenkins_home" {
+variable "jenkins_url" {
   type        = string
-  default     = "./.jenkins_home"
+  description = "Jenkins base URL running on the host (external to Terraform)."
+  default     = "http://localhost:8080"
 }
