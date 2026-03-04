@@ -15,9 +15,3 @@ EOT
     interpreter = ["/bin/bash", "-lc"]
   }
 }
-
-data "null_data_source" "ctx" {
-  inputs = {
-    kube_context = "minikube"
-  }
-}

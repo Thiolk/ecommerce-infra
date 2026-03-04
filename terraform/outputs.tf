@@ -6,10 +6,6 @@ output "minikube_profile" {
   value = var.minikube_profile
 }
 
-output "minikube_ip" {
-  value = module.minikube.minikube_ip
-}
-
 output "ingress_namespace" {
   value = var.ingress_namespace
 }
