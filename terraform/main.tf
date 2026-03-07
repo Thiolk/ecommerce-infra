@@ -1,13 +1,13 @@
- locals {
+locals {
   env       = terraform.workspace
   namespace = terraform.workspace
 }
 
 module "minikube" {
-  source          = "./modules/minikube"
+  source           = "./modules/minikube"
   minikube_profile = var.minikube_profile
-  cpus            = var.cpus
-  memory_mb       = var.memory_mb
+  cpus             = var.cpus
+  memory_mb        = var.memory_mb
 }
 
 module "namespaces" {

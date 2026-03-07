@@ -22,13 +22,13 @@ variable "dockerhub_user" {
 }
 
 variable "ingress_namespace" {
-  type        = string
-  default     = "ingress-nginx"
+  type    = string
+  default = "ingress-nginx"
 }
 
 variable "ingress_controller_service" {
-  type        = string
-  default     = "ingress-nginx-controller"
+  type    = string
+  default = "ingress-nginx-controller"
 }
 
 variable "jenkins_url" {

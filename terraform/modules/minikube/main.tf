@@ -6,7 +6,7 @@ resource "null_resource" "minikube_start" {
   }
 
   provisioner "local-exec" {
-    command = <<EOT
+    command     = <<EOT
 set -eux
 minikube start -p "${var.minikube_profile}" --cpus=${var.cpus} --memory=${var.memory_mb}mb
 minikube addons enable ingress -p "${var.minikube_profile}"

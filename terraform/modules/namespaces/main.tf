@@ -4,7 +4,7 @@ resource "null_resource" "namespaces" {
   }
 
   provisioner "local-exec" {
-    command = <<EOT
+    command     = <<EOT
 set -eux
 for ns in ${join(" ", var.namespaces)}; do
   kubectl get ns "$ns" >/dev/null 2>&1 || kubectl create ns "$ns"
