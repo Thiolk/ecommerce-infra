@@ -112,24 +112,30 @@ This project uses a **local Terraform backend** with workspace-based environment
 
 Backend configuration:
 
+```
 terraform {
   backend "local" {
     path          = "state/terraform.tfstate"
     workspace_dir = "state/workspaces"
   }
 }
+```
 
 Workspace state files are stored under:
 
+```
 terraform/state/workspaces/
+```
 
 Each workspace maintains an independent state file.
 
 Example:
 
-state/workspaces/dev  
-state/workspaces/staging  
-state/workspaces/prod  
+```
+state/workspaces/dev
+state/workspaces/staging
+state/workspaces/prod
+```
 
 This prevents infrastructure conflicts between environments.
 
@@ -147,12 +153,14 @@ Available workspaces:
 
 Example commands:
 
+```
 cd terraform
 
 terraform workspace list
 terraform workspace select dev
 terraform workspace select staging
 terraform workspace select prod
+```
 
 ---
 
@@ -160,7 +168,9 @@ terraform workspace select prod
 
 Environment-specific variables are stored in:
 
+```
 terraform/env/
+```
 
 Files:
 
@@ -182,20 +192,28 @@ All Terraform commands should be run from the **terraform directory**.
 
 Initialize Terraform:
 
+```
 cd terraform
 terraform init
+```
 
 Select workspace:
 
+```
 terraform workspace select dev
+```
 
 Plan infrastructure changes:
 
+```
 terraform plan -var-file="env/dev.tfvars"
+```
 
 Apply infrastructure changes:
 
+```
 terraform apply -var-file="env/dev.tfvars"
+```
 
 Repeat the process for staging and production environments.
 
@@ -207,26 +225,30 @@ Terraform outputs provide infrastructure information required by **Jenkins CI/CD
 
 Example outputs:
 
-dockerhub_user  
-frontend_host  
-order_host  
-product_host  
-kube_context  
-ingress_namespace  
-ingress_controller_service  
-jenkins_url  
-namespace  
-minikube_profile  
+- dockerhub_user
+- frontend_host
+- order_host
+- product_host
+- kube_context
+- ingress_namespace
+- ingress_controller_service
+- jenkins_url
+- namespace
+- minikube_profile
 
 Example command:
 
+```
 terraform output
+```
 
 Example output:
 
-frontend_host = "frontend-prod.local"  
-kube_context = "minikube"  
+```
+frontend_host = "frontend-prod.local"
+kube_context = "minikube"
 ingress_namespace = "ingress-nginx"
+```
 
 ---
 
@@ -236,13 +258,17 @@ Jenkins pipelines retrieve infrastructure outputs using a helper script.
 
 Script:
 
+```
 scripts/write-outputs-json.sh
+```
 
 Usage:
 
-./scripts/write-outputs-json.sh dev  
-./scripts/write-outputs-json.sh staging  
-./scripts/write-outputs-json.sh prod  
+```
+./scripts/write-outputs-json.sh dev
+./scripts/write-outputs-json.sh staging
+./scripts/write-outputs-json.sh prod
+```
 
 The script performs:
 
@@ -252,10 +278,12 @@ The script performs:
 
 Generated files:
 
-infra-outputs.json  
-infra-outputs-dev.json  
-infra-outputs-staging.json  
-infra-outputs-prod.json  
+```
+infra-outputs.json
+infra-outputs-dev.json
+infra-outputs-staging.json
+infra-outputs-prod.json
+```
 
 These files are archived by Jenkins and used by service pipelines.
 
@@ -267,6 +295,7 @@ The Terraform pipeline exports infrastructure outputs for other pipelines.
 
 Example Jenkins stage:
 
+```
 stage('Export Outputs') {
   steps {
     sh '''
@@ -277,10 +306,13 @@ stage('Export Outputs') {
     archiveArtifacts artifacts: 'infra-outputs*.json', fingerprint: true
   }
 }
+```
 
 Other microservice pipelines retrieve these artifacts and load them using:
 
+```
 deploy/ci/load-infra-outputs.sh
+```
 
 This allows pipelines to dynamically obtain:
 
@@ -294,8 +326,10 @@ This allows pipelines to dynamically obtain:
 
 Service pipelines load Terraform outputs using:
 
+```
 eval "$(./deploy/ci/load-infra-outputs.sh)"
 kubectl config use-context "$KUBE_CONTEXT"
+```
 
 This ensures deployments always target the correct Kubernetes cluster.
 
@@ -307,21 +341,29 @@ Terraform state files represent the current infrastructure configuration and mus
 
 State files are located in:
 
+```
 terraform/state/
+```
 
 Backup procedure:
 
 1. Create a timestamped backup directory
 
+```
 mkdir -p backups/$(date +%Y%m%d-%H%M%S)
+```
 
 2. Copy Terraform state files
 
+```
 cp -r terraform/state backups/$(date +%Y%m%d-%H%M%S)/
+```
 
 3. Verify backup contents
 
+```
 ls backups/
+```
 
 Backups should be created:
 
@@ -336,26 +378,18 @@ After Terraform deployment, verify cluster health.
 
 Check Minikube:
 
+```
 minikube status
+```
 
 Verify Kubernetes namespaces:
 
+```
 kubectl get namespaces
+```
 
 Verify ingress controller:
 
+```
 kubectl -n ingress-nginx get pods
-
----
-
-# Current Infrastructure Status
-
-The Terraform configuration currently provides:
-
-- Minikube Kubernetes cluster configuration
-- Environment-isolated namespaces
-- Local infrastructure resources
-- Jenkins CI/CD integration outputs
-- Workspace-separated Terraform state management
-
-This setup enables automated CI/CD pipelines to deploy microservices onto a reproducible infrastructure environment.
+```
