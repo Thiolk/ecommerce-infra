@@ -1,6 +1,9 @@
 pipeline {
   agent any
-  options { disableConcurrentBuilds() }
+  options {
+    disableConcurrentBuilds()
+    timestamps()
+  }
 
   parameters {
     choice(name: 'TARGET_ENV', choices: ['dev','staging','prod'], description: 'Terraform workspace / namespace')
@@ -8,15 +11,32 @@ pipeline {
 
   environment {
     PATH = "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    TF_DIR = "terraform"
   }
 
   stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
     stage('Terraform Init') {
       steps {
         sh '''
           set -eux
-          cd terraform
+          cd "${TF_DIR}"
           terraform init
+        '''
+      }
+    }
+
+    stage('Terraform Format Check') {
+      steps {
+        sh '''
+          set -eux
+          cd "${TF_DIR}"
+          terraform fmt -check -recursive
         '''
       }
     }
@@ -25,28 +45,44 @@ pipeline {
       steps {
         sh '''
           set -eux
-          cd terraform
+          cd "${TF_DIR}"
           terraform workspace select "${TARGET_ENV}" || terraform workspace new "${TARGET_ENV}"
         '''
       }
     }
 
-    stage('Plan') {
+    stage('Terraform Validate') {
       steps {
         sh '''
           set -eux
-          cd terraform
-          terraform plan -var-file="env/${TARGET_ENV}.tfvars"
+          cd "${TF_DIR}"
+          terraform validate
         '''
       }
     }
 
-    stage('Apply') {
+    stage('Terraform Plan') {
       steps {
         sh '''
           set -eux
-          cd terraform
-          terraform apply -auto-approve -var-file="env/${TARGET_ENV}.tfvars"
+          mkdir -p artifacts
+          cd "${TF_DIR}"
+
+          terraform plan \
+            -var-file="env/${TARGET_ENV}.tfvars" \
+            -out="tfplan-${TARGET_ENV}"
+
+          terraform show -no-color "tfplan-${TARGET_ENV}" > "../artifacts/tfplan-${TARGET_ENV}.txt"
+        '''
+      }
+    }
+
+    stage('Terraform Apply') {
+      steps {
+        sh '''
+          set -eux
+          cd "${TF_DIR}"
+          terraform apply -auto-approve "tfplan-${TARGET_ENV}"
         '''
       }
     }
@@ -58,8 +94,28 @@ pipeline {
           chmod +x ./scripts/write-outputs-json.sh
           ./scripts/write-outputs-json.sh "${TARGET_ENV}"
         '''
-        archiveArtifacts artifacts: 'infra-outputs*.json', fingerprint: true
+        archiveArtifacts artifacts: 'infra-outputs*.json,artifacts/tfplan-*.txt', fingerprint: true
       }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'artifacts/**', allowEmptyArchive: true
+    }
+
+    failure {
+      sh '''
+        set +e
+        echo "Terraform pipeline FAILED. Check validation/plan logs and archived artifacts."
+      '''
+    }
+
+    cleanup {
+      sh '''
+        set +e
+        rm -rf artifacts || true
+      '''
     }
   }
 }
